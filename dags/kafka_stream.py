@@ -1,34 +1,26 @@
-# Importaciones necesarias para el script
-import uuid  # Utilizado para generar identificadores únicos
-from datetime import datetime  # Para trabajar con fechas y horas
-from airflow import DAG  # Importa la clase DAG de Airflow para definir flujos de trabajo
-from airflow.operators.python import PythonOperator  # Permite ejecutar funciones Python como tareas en Airflow
-import requests  # Para realizar solicitudes HTTP a APIs externas
-import json  # Para trabajar con datos en formato JSON
-from kafka import KafkaProducer  # Para enviar mensajes a un tema en Kafka
-import time  # Para trabajar con funciones relacionadas con el tiempo
-import logging  # Para registrar mensajes de error o información
+import uuid
+from datetime import datetime
+from airflow import DAG
+from airflow.operators.python import PythonOperator
 
-# Argumentos predeterminados para el DAG de Airflow
 default_args = {
-    'owner': 'airscholar',  # Propietario del DAG, típicamente el creador o el responsable del mantenimiento
-    'start_date': datetime(2023, 9, 3, 10, 00)  # Fecha de inicio del DAG, no ejecuta tareas antes de esta fecha
+    'owner': 'airscholar',
+    'start_date': datetime(2023, 9, 3, 10, 00)
 }
 
-# Función para obtener datos de una API externa
 def get_data():
-    # Realiza una solicitud GET a la API de usuarios aleatorios y convierte la respuesta a JSON
-    res = requests.get("https://randomuser.me/api/")
-    res = res.json()  # Parsea la respuesta a formato JSON
-    res = res['results'][0]  # Selecciona el primer usuario de los resultados
-    return res  # Devuelve los datos del usuario
+    import requests
 
-# Función para formatear los datos obtenidos de la API
+    res = requests.get("https://randomuser.me/api/")
+    res = res.json()
+    res = res['results'][0]
+
+    return res
+
 def format_data(res):
-    data = {}  # Diccionario para almacenar los datos formateados
-    location = res['location']  # Extrae la ubicación del usuario
-    # Asigna los valores extraídos y formateados al diccionario 'data'
-    data['id'] = str(uuid.uuid4())  # Genera un ID único y lo convierte a cadena
+    data = {}
+    location = res['location']
+    data['id'] = uuid.uuid4()
     data['first_name'] = res['name']['first']
     data['last_name'] = res['name']['last']
     data['gender'] = res['gender']
@@ -41,32 +33,36 @@ def format_data(res):
     data['registered_date'] = res['registered']['date']
     data['phone'] = res['phone']
     data['picture'] = res['picture']['medium']
-    return data  # Devuelve los datos formateados
 
-# Función principal que gestiona la obtención, formateo y envío de datos a Kafka
+    return data
+
 def stream_data():
-    # Crea un productor de Kafka configurado para conectarse a un broker en 'localhost:9092'
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'], max_block_ms=5000)
-    curr_time = time.time()  # Obtiene el tiempo actual
+    import json
+    from kafka import KafkaProducer
+    import time
+    import logging
+
+    producer = KafkaProducer(bootstrap_servers=['broker:29092'], max_block_ms=5000)
+    curr_time = time.time()
 
     while True:
-        if time.time() > curr_time + 60:  # Ejecuta el bucle durante 1 minuto
+        if time.time() > curr_time + 60: #1 minute
             break
         try:
-            res = get_data()  # Obtiene datos de la API
-            res = format_data(res)  # Formatea los datos obtenidos
-            # Envía los datos formateados al tema 'users_created' en Kafka
+            res = get_data()
+            res = format_data(res)
+
             producer.send('users_created', json.dumps(res).encode('utf-8'))
         except Exception as e:
-            logging.error(f'An error occurred: {e}')  # Registra el error si ocurre alguno
+            logging.error(f'An error occured: {e}')
             continue
 
-# Define el DAG en Airflow
-with DAG('user_automation', default_args=default_args, schedule='@daily', catchup=False) as dag:
-    # Crea una tarea en Airflow que ejecutará la función 'stream_data'
-    streaming_task = PythonOperator(
-        task_id='stream_data_from_api',  # Identificador único para la tarea
-        python_callable=stream_data  # Función que será llamada por la tarea
-    )
+with DAG('user_automation',
+         default_args=default_args,
+         schedule_interval='@daily',
+         catchup=False) as dag:
 
-stream_data()
+    streaming_task = PythonOperator(
+        task_id='stream_data_from_api',
+        python_callable=stream_data
+    )
