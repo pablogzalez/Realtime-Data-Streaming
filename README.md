@@ -11,18 +11,18 @@ This project implements an automated data engineering workflow that collects, pr
 
 ### Setup
 
-1. **Clone the repository**
+*1. Clone the repository*
 
    git clone [https://github.com/your-username/your-repository.git] (https://github.com/pablogzalez/Realtime-Data-Streaming/tree/master)
    [cd your-repository (Realtime-Data-Streaming)
 
-2. **Start the services**
+*2. Start the services*
 
   Use Docker Compose to build and start the necessary services (Airflow, Kafka, Spark, Cassandra).
 
   docker-compose up -d
 
-3. **Execution**
+*3. Execution*
 - ***Apache Airflow:*** Access the Airflow UI at http://localhost:8080 and trigger the user_automation DAG.
 - ***Verify execution:*** Check the logs in Airflow to ensure data is being processed and stored correctly.
 
