@@ -22,7 +22,7 @@ This project implements an automated data engineering workflow that collects, pr
 
   docker-compose up -d
 
-3.Execution
+3. **Execution**
 - ***Apache Airflow:*** Access the Airflow UI at http://localhost:8080 and trigger the user_automation DAG.
 - ***Verify execution:*** Check the logs in Airflow to ensure data is being processed and stored correctly.
 
