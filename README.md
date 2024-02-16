@@ -13,8 +13,8 @@ This project implements an automated data engineering workflow that collects, pr
 
 1. **Clone the repository**
 
-   git clone https://github.com/your-username/your-repository.git
-   cd your-repository
+   git clone [https://github.com/your-username/your-repository.git] (https://github.com/pablogzalez/Realtime-Data-Streaming/tree/master)
+   [cd your-repository (Realtime-Data-Streaming)
 
 2. **Start the services**
 
